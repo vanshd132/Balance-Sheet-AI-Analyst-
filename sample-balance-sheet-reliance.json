@@ -1,0 +1,16 @@
+{
+  "total_assets": 1500000000000,
+  "current_assets": 500000000000,
+  "non_current_assets": 1000000000000,
+  "total_liabilities": 800000000000,
+  "current_liabilities": 200000000000,
+  "non_current_liabilities": 600000000000,
+  "total_equity": 700000000000,
+  "revenue": 800000000000,
+  "net_income": 50000000000,
+  "cash_and_equivalents": 100000000000,
+  "accounts_receivable": 80000000000,
+  "inventory": 120000000000,
+  "property_plant_equipment": 800000000000,
+  "intangible_assets": 200000000000
+} 
