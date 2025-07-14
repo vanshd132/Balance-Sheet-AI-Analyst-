@@ -86,7 +86,7 @@ npm run dev
 
 ### Database Setup
 1. Create PostgreSQL database
-2. Run the SQL schema from `backend/schema.sql`
+2. Run the SQL schema from `backend/databse.sql`
 3. Insert sample data for testing
 
 ## 👥 Demo Accounts
@@ -147,7 +147,7 @@ flowise/
 ├── backend/                 # Express.js API server
 │   ├── routes/             # API endpoints
 │   ├── middleware/         # Auth & validation
-│   └── schema.sql          # Database schema
+│   └── database.sql          # Database schema
 ├── frontend/               # Next.js application
 │   ├── app/               # App router pages
 │   │   ├── dashboard/     # Dashboard components
