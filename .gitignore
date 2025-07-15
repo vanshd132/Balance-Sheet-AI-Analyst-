@@ -1,2 +1,13 @@
-# Only exclude node_modules
-node_modules/ 
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache 
