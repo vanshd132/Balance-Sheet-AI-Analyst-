@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Initialize Google Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Chat with AI about balance sheet data
 router.post('/analyze', authenticateToken, async (req, res) => {
@@ -49,14 +49,13 @@ router.post('/analyze', authenticateToken, async (req, res) => {
         balanceSheetData = balanceSheet.data;
         companyName = balanceSheet.company_name;
       } else if (company_id) {
-        // Get latest balance sheet data for the company
+        // Get ALL balance sheet data for the company across all years
         const result = await client.query(
-          `SELECT bs.data, c.name as company_name 
+          `SELECT bs.data, bs.year, bs.quarter, c.name as company_name 
            FROM balance_sheets bs 
            LEFT JOIN companies c ON bs.company_id = c.id 
            WHERE bs.company_id = $1 
-           ORDER BY bs.year DESC, bs.quarter DESC 
-           LIMIT 1`,
+           ORDER BY bs.year DESC, bs.quarter DESC`,
           [company_id]
         );
         
@@ -70,35 +69,81 @@ router.post('/analyze', authenticateToken, async (req, res) => {
           return res.status(403).json({ error: 'Access denied' });
         }
 
-        balanceSheetData = result.rows[0].data;
+        // Organize all balance sheet data by year and quarter
+        const allBalanceSheetData = {};
+        result.rows.forEach(row => {
+          const yearKey = row.year;
+          const quarterKey = row.quarter || 'annual';
+          if (!allBalanceSheetData[yearKey]) {
+            allBalanceSheetData[yearKey] = {};
+          }
+          allBalanceSheetData[yearKey][quarterKey] = row.data;
+        });
+
+        balanceSheetData = allBalanceSheetData;
         companyName = result.rows[0].company_name;
       } else {
         return res.status(400).json({ error: 'Either balance_sheet_id or company_id is required' });
       }
 
       // Prepare context for AI
-      const balanceSheetContext = `
-        Company: ${companyName}
-        Balance Sheet Data: ${JSON.stringify(balanceSheetData, null, 2)}
-        
-        You are a financial analyst AI assistant. Analyze the balance sheet data and provide insights to help top management understand the company's financial performance.
-        
-        Focus on:
-        - Key financial ratios and metrics
-        - Trends and patterns
-        - Risk assessment
-        - Recommendations for management
-        - Comparison with industry standards (if applicable)
-        
-        Provide clear, actionable insights that would be valuable for top management decision-making.
-      `;
+      let balanceSheetContext;
+      
+      if (balance_sheet_id) {
+        // Single balance sheet analysis
+        balanceSheetContext = `
+          Company: ${companyName}
+          Balance Sheet Data: ${JSON.stringify(balanceSheetData, null, 2)}
+          
+          You are a financial analyst AI assistant. Analyze the balance sheet data and provide insights to help top management understand the company's financial performance.
+          
+          Focus on:
+          - Key financial ratios and metrics
+          - Trends and patterns
+          - Risk assessment
+          - Recommendations for management
+          - Comparison with industry standards (if applicable)
+          
+          Provide clear, actionable insights that would be valuable for top management decision-making.
+        `;
+      } else {
+        // Multi-year analysis
+        balanceSheetContext = `
+          Company: ${companyName}
+          
+          You have access to COMPLETE financial data for this company across ALL available years and quarters:
+          ${JSON.stringify(balanceSheetData, null, 2)}
+          
+          This data is organized by year and quarter, showing the company's financial evolution over time.
+          
+          You are a senior financial analyst AI assistant. Provide comprehensive analysis using ALL available data:
+          
+          Analysis Requirements:
+          1. **Multi-Year Trends**: Analyze how key metrics have changed over time
+          2. **Quarterly Patterns**: Identify seasonal patterns and quarterly performance
+          3. **Growth Analysis**: Calculate year-over-year and quarter-over-quarter growth rates
+          4. **Financial Ratios**: Compute and compare ratios across all periods
+          5. **Risk Assessment**: Identify trends in liquidity, solvency, and profitability
+          6. **Strategic Insights**: Provide actionable recommendations based on historical patterns
+          7. **Performance Comparison**: Compare different years and quarters
+          
+          When analyzing, always reference specific years and quarters, and provide concrete numbers and percentages.
+          
+          Focus on providing insights that help top management understand:
+          - Long-term financial health trends
+          - Seasonal performance patterns
+          - Growth trajectory and sustainability
+          - Risk factors and opportunities
+          - Strategic recommendations for future planning
+        `;
+      }
 
       const promptWithContext = `
         ${balanceSheetContext}
         
         User Question: ${question}
         
-        Please provide a comprehensive analysis based on the balance sheet data. Include specific numbers, ratios, and actionable insights.
+        Please provide a comprehensive analysis using ALL available data. Include specific numbers, ratios, percentages, and actionable insights. Reference specific years and quarters when making comparisons.
 
         At the end of your answer, output a JSON array of up to 3 suggested follow-up questions, like this:
         SuggestedQuestions: ["What is the trend in revenue?", "How does the debt-to-equity ratio compare to last year?", "What are the main risks for this company?"]
@@ -190,14 +235,13 @@ router.get('/insights/:companyId', authenticateToken, async (req, res) => {
         return res.status(403).json({ error: 'Access denied' });
       }
 
-      // Get latest balance sheet data
+      // Get ALL balance sheet data for the company
       const result = await client.query(
-        `SELECT bs.data, c.name as company_name 
+        `SELECT bs.data, bs.year, bs.quarter, c.name as company_name 
          FROM balance_sheets bs 
          LEFT JOIN companies c ON bs.company_id = c.id 
          WHERE bs.company_id = $1 
-         ORDER BY bs.year DESC, bs.quarter DESC 
-         LIMIT 1`,
+         ORDER BY bs.year DESC, bs.quarter DESC`,
         [companyId]
       );
       
@@ -205,33 +249,58 @@ router.get('/insights/:companyId', authenticateToken, async (req, res) => {
         return res.status(404).json({ error: 'No balance sheet data found for this company' });
       }
 
-      const balanceSheetData = result.rows[0].data;
+      // Organize all balance sheet data by year and quarter
+      const allBalanceSheetData = {};
+      result.rows.forEach(row => {
+        const yearKey = row.year;
+        const quarterKey = row.quarter || 'annual';
+        if (!allBalanceSheetData[yearKey]) {
+          allBalanceSheetData[yearKey] = {};
+        }
+        allBalanceSheetData[yearKey][quarterKey] = row.data;
+      });
+
+      const balanceSheetData = allBalanceSheetData;
       const companyName = result.rows[0].company_name;
 
-      // Generate quick insights
+      // Generate comprehensive insights using all data
       const insightsPrompt = `
         Company: ${companyName}
-        Balance Sheet Data: ${JSON.stringify(balanceSheetData, null, 2)}
         
-        Provide a brief summary of key insights for top management:
-        1. Financial health overview
-        2. Key ratios and metrics
-        3. Potential concerns or opportunities
-        4. Quick recommendations
+        You have access to COMPLETE financial data for this company across ALL available years and quarters:
+        ${JSON.stringify(balanceSheetData, null, 2)}
         
-        Keep it concise and actionable.
+        Provide a comprehensive summary of key insights for top management using ALL available data:
+        
+        1. **Multi-Year Financial Health Overview**: Analyze trends across all years
+        2. **Key Performance Indicators**: Calculate and compare ratios across all periods
+        3. **Growth Trajectory**: Identify year-over-year and quarter-over-quarter patterns
+        4. **Risk Assessment**: Identify potential concerns based on historical trends
+        5. **Strategic Opportunities**: Highlight opportunities based on performance patterns
+        6. **Quick Recommendations**: Provide actionable insights for management
+        
+        Reference specific years and quarters when making comparisons. Keep it comprehensive but concise.
       `;
 
       const result2 = await model.generateContent(insightsPrompt);
       const insights = result2.response.text();
 
+      // Calculate summary statistics from all available data
+      const years = Object.keys(allBalanceSheetData).sort((a, b) => b - a); // Sort years descending
+      const latestYear = years[0];
+      const latestQuarter = Object.keys(allBalanceSheetData[latestYear] || {}).sort((a, b) => b - a)[0];
+      const latestData = allBalanceSheetData[latestYear]?.[latestQuarter] || {};
+
       res.json({
         company_name: companyName,
         insights: insights,
         data_summary: {
-          total_assets: balanceSheetData.total_assets || 0,
-          total_liabilities: balanceSheetData.total_liabilities || 0,
-          total_equity: balanceSheetData.total_equity || 0
+          total_assets: latestData.total_assets || 0,
+          total_liabilities: latestData.total_liabilities || 0,
+          total_equity: latestData.total_equity || 0,
+          available_years: years,
+          total_periods: result.rows.length,
+          latest_period: `${latestYear} Q${latestQuarter || 'N/A'}`
         }
       });
     } finally {

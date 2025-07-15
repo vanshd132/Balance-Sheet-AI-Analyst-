@@ -28,10 +28,12 @@ export default function AIChatPanel({ companyId, companyName }) {
   const chatEndRef = useRef(null);
   const [suggestions, setSuggestions] = useState([]);
   const defaultSuggestions = [
-    `Show me the latest financial highlights for ${companyName}`,
-    `What are the key risks for ${companyName}?`,
-    `How has ${companyName}'s revenue changed over time?`,
-    `Analyze the debt-to-equity ratio for ${companyName}`
+    `Show me the complete financial analysis for ${companyName} across all years`,
+    `What are the key trends and patterns for ${companyName} over time?`,
+    `How has ${companyName}'s financial performance evolved year by year?`,
+    `Analyze the growth trajectory and risks for ${companyName}`,
+    `Compare ${companyName}'s performance across different quarters and years`,
+    `What are the strategic insights from ${companyName}'s historical data?`
   ];
 
   function formatTime(date) {
@@ -112,8 +114,9 @@ export default function AIChatPanel({ companyId, companyName }) {
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Welcome to AI Financial Analysis! 🤖</h3>
               <p className="text-sm text-gray-600 mb-3">
-                I can help you analyze {companyName}'s balance sheets, identify trends, and provide insights. 
-                Try asking about financial ratios, growth patterns, or risk assessments.
+                I have access to {companyName}'s COMPLETE financial data across ALL available years and quarters. 
+                I can analyze trends, compare performance over time, and provide comprehensive insights. 
+                Ask me about multi-year trends, quarterly patterns, growth analysis, or strategic recommendations.
               </p>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <MessageCircle className="w-3 h-3" />
@@ -189,7 +192,7 @@ export default function AIChatPanel({ companyId, companyName }) {
         <input
           type="text"
           className="input-field flex-1"
-          placeholder="Ask about financial performance, ratios, trends..."
+          placeholder="Ask about multi-year trends, quarterly patterns, growth analysis, strategic insights..."
           value={input}
           onChange={e => setInput(e.target.value)}
           disabled={loading}
