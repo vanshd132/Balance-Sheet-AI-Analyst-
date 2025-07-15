@@ -192,6 +192,19 @@ flowise/
 ### AI Analysis
 - `POST /api/chat/analyze` - AI-powered financial analysis
 
+## 🎥 Demo Video
+
+📹 **Watch the complete platform demonstration:**
+[Balance Sheet AI Analyst Demo](https://drive.google.com/file/d/19HLIpUKaGaXZdFILJqqMdOMuqA98n3LX/view?usp=sharing)
+
+The demo showcases:
+- User authentication and role-based access
+- Balance sheet upload and management
+- AI-powered financial analysis
+- Multi-year data analysis capabilities
+- Modern UI/UX design
+- Real-time insights and recommendations
+
 ## 🚀 Deployment
 
 ### Backend Deployment
