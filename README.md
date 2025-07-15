@@ -1,3 +1,9 @@
+
+## 🎥 Demo Video
+
+📹 **Watch the complete platform demonstration:**
+[Balance Sheet AI Analyst Demo](https://drive.google.com/file/d/19HLIpUKaGaXZdFILJqqMdOMuqA98n3LX/view?usp=sharing)
+
 # Balance Sheet Analyst - AI-Powered Financial Analysis Platform
 
 A modern, role-based financial analysis platform with AI-powered insights using Google Gemini. Built with Next.js frontend and Express.js backend with PostgreSQL database.
@@ -191,11 +197,6 @@ flowise/
 
 ### AI Analysis
 - `POST /api/chat/analyze` - AI-powered financial analysis
-
-## 🎥 Demo Video
-
-📹 **Watch the complete platform demonstration:**
-[Balance Sheet AI Analyst Demo](https://drive.google.com/file/d/19HLIpUKaGaXZdFILJqqMdOMuqA98n3LX/view?usp=sharing)
 
 The demo showcases:
 - User authentication and role-based access
