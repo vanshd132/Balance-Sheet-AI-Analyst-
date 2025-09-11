@@ -1,4 +1,4 @@
-// File: E:\flowise\frontend\app\dashboard\page.js
+// File: E:\Games\Git Projects\Balance-Sheet-AI-Analyst-\frontend\app\dashboard\page.js
 import * as entry from '../../../../app/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
